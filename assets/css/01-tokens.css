@@ -1,0 +1,110 @@
+/* ============================================================
+   01-tokens.css — متغيّرات التصميم (ألوان، مسافات، ظلال)
+   المصدر الوحيد لكل قيمة لونية في التطبيق.
+   ============================================================ */
+
+:root {
+  /* الهوية */
+  --brand:        #0f766e;
+  --brand-2:      #115e59;
+  --brand-soft:   #e6f4f1;
+  --brand-ink:    #0b5750;
+
+  /* الحالات */
+  --ok:           #15803d;
+  --ok-soft:      #e8f6ec;
+  --warn:         #b45309;
+  --warn-soft:    #fdf3e3;
+  --danger:       #b91c1c;
+  --danger-soft:  #fdeaea;
+
+  /* الأسطح والنص */
+  --bg:           #f4f6f7;
+  --surface:      #ffffff;
+  --surface-2:    #f8fafa;
+  --text:         #131a1e;
+  --text-2:       #4b5763;
+  --muted:        #77838f;
+  --line:         #e3e8eb;
+  --line-strong:  #ccd5da;
+
+  /* الأبعاد */
+  --wrap:         520px;
+  --r-sm:         10px;
+  --r:            16px;
+  --r-lg:         22px;
+  --r-pill:       999px;
+
+  --gap:          14px;
+  --pad:          16px;
+
+  --appbar-h:     56px;
+  --tabbar-h:     62px;
+
+  /* الظلال */
+  --sh-1:         0 1px 2px rgba(19, 26, 30, .06), 0 1px 3px rgba(19, 26, 30, .04);
+  --sh-2:         0 4px 14px rgba(19, 26, 30, .08);
+  --sh-3:         0 10px 30px rgba(19, 26, 30, .16);
+  --sh-brand:     0 8px 20px rgba(15, 118, 110, .32);
+
+  --ease:         cubic-bezier(.2, .7, .3, 1);
+}
+
+/* الوضع الليلي — يتبع النظام تلقائيًا، ويمكن فرضه من الإعدادات */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand:       #2dd4bf;
+    --brand-2:     #14b8a6;
+    --brand-soft:  #133b39;
+    --brand-ink:   #99f6e4;
+
+    --ok:          #4ade80;
+    --ok-soft:     #14301f;
+    --warn:        #fbbf24;
+    --warn-soft:   #322411;
+    --danger:      #f87171;
+    --danger-soft: #3a1717;
+
+    --bg:          #0d1114;
+    --surface:     #161c20;
+    --surface-2:   #1c2429;
+    --text:        #eaf0f2;
+    --text-2:      #b3c0c7;
+    --muted:       #8c9aa2;
+    --line:        #263137;
+    --line-strong: #33424a;
+
+    --sh-1:        0 1px 2px rgba(0, 0, 0, .4);
+    --sh-2:        0 4px 14px rgba(0, 0, 0, .45);
+    --sh-3:        0 10px 30px rgba(0, 0, 0, .6);
+    --sh-brand:    0 8px 20px rgba(45, 212, 191, .22);
+  }
+}
+
+:root[data-theme="dark"] {
+  --brand:       #2dd4bf;
+  --brand-2:     #14b8a6;
+  --brand-soft:  #133b39;
+  --brand-ink:   #99f6e4;
+
+  --ok:          #4ade80;
+  --ok-soft:     #14301f;
+  --warn:        #fbbf24;
+  --warn-soft:   #322411;
+  --danger:      #f87171;
+  --danger-soft: #3a1717;
+
+  --bg:          #0d1114;
+  --surface:     #161c20;
+  --surface-2:   #1c2429;
+  --text:        #eaf0f2;
+  --text-2:      #b3c0c7;
+  --muted:       #8c9aa2;
+  --line:        #263137;
+  --line-strong: #33424a;
+
+  --sh-1:        0 1px 2px rgba(0, 0, 0, .4);
+  --sh-2:        0 4px 14px rgba(0, 0, 0, .45);
+  --sh-3:        0 10px 30px rgba(0, 0, 0, .6);
+  --sh-brand:    0 8px 20px rgba(45, 212, 191, .22);
+}

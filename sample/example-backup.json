@@ -1,0 +1,79 @@
+{
+  "signature": "debt-tracker-backup",
+  "schema": 1,
+  "app": "ديوني",
+  "exportedAt": "2026-08-07T09:00:00.000Z",
+  "counts": { "loans": 3, "payments": 15 },
+  "settings": {
+    "currency": "QAR",
+    "monthlyIncome": 12000,
+    "otherIncome": 0,
+    "alertDays": 7,
+    "theme": "auto",
+    "lastBackupAt": null,
+    "createdAt": "2026-01-05T08:00:00.000Z"
+  },
+  "loans": [
+    {
+      "id": "loan_demo_bank",
+      "title": "تمويل شخصي",
+      "lender": "بنك قطر الوطني",
+      "type": "bank",
+      "principal": 100000,
+      "totalDue": 120000,
+      "installmentsCount": 48,
+      "startDate": "2026-01-05",
+      "openingPaid": 0,
+      "notes": "عقد رقم 44821 — الخصم تلقائي من الراتب يوم 5 من كل شهر.",
+      "archived": false,
+      "createdAt": "2026-01-05T08:00:00.000Z"
+    },
+    {
+      "id": "loan_demo_person",
+      "title": "سلفة من أحمد",
+      "lender": "أحمد",
+      "type": "person",
+      "principal": 6000,
+      "totalDue": 6000,
+      "installmentsCount": 6,
+      "startDate": "2026-05-10",
+      "openingPaid": 0,
+      "notes": "بلا فوائد — 1000 كل شهر.",
+      "archived": false,
+      "createdAt": "2026-05-10T08:00:00.000Z"
+    },
+    {
+      "id": "loan_demo_store",
+      "title": "جوّال بالتقسيط",
+      "lender": "متجر الإلكترونيات",
+      "type": "company",
+      "principal": 3600,
+      "totalDue": 3600,
+      "installmentsCount": 6,
+      "startDate": "2025-10-01",
+      "openingPaid": 0,
+      "notes": "",
+      "archived": false,
+      "createdAt": "2025-10-01T08:00:00.000Z"
+    }
+  ],
+  "payments": [
+    { "id": "pay_d01", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-01-05", "note": "خصم من الراتب", "createdAt": "2026-01-05T08:10:00.000Z" },
+    { "id": "pay_d02", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-02-05", "note": "خصم من الراتب", "createdAt": "2026-02-05T08:10:00.000Z" },
+    { "id": "pay_d03", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-03-05", "note": "خصم من الراتب", "createdAt": "2026-03-05T08:10:00.000Z" },
+    { "id": "pay_d04", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-04-05", "note": "خصم من الراتب", "createdAt": "2026-04-05T08:10:00.000Z" },
+    { "id": "pay_d05", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-05-05", "note": "خصم من الراتب", "createdAt": "2026-05-05T08:10:00.000Z" },
+    { "id": "pay_d06", "loanId": "loan_demo_bank", "amount": 2500, "date": "2026-06-05", "note": "خصم من الراتب", "createdAt": "2026-06-05T08:10:00.000Z" },
+
+    { "id": "pay_d07", "loanId": "loan_demo_person", "amount": 1000, "date": "2026-05-10", "note": "تحويل بنكي", "createdAt": "2026-05-10T09:00:00.000Z" },
+    { "id": "pay_d08", "loanId": "loan_demo_person", "amount": 1000, "date": "2026-06-10", "note": "نقدًا", "createdAt": "2026-06-10T09:00:00.000Z" },
+    { "id": "pay_d09", "loanId": "loan_demo_person", "amount": 1000, "date": "2026-07-10", "note": "تحويل بنكي", "createdAt": "2026-07-10T09:00:00.000Z" },
+
+    { "id": "pay_d10", "loanId": "loan_demo_store", "amount": 600, "date": "2025-10-01", "note": "", "createdAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "pay_d11", "loanId": "loan_demo_store", "amount": 600, "date": "2025-11-01", "note": "", "createdAt": "2025-11-01T09:00:00.000Z" },
+    { "id": "pay_d12", "loanId": "loan_demo_store", "amount": 600, "date": "2025-12-01", "note": "", "createdAt": "2025-12-01T09:00:00.000Z" },
+    { "id": "pay_d13", "loanId": "loan_demo_store", "amount": 600, "date": "2026-01-01", "note": "", "createdAt": "2026-01-01T09:00:00.000Z" },
+    { "id": "pay_d14", "loanId": "loan_demo_store", "amount": 600, "date": "2026-02-01", "note": "", "createdAt": "2026-02-01T09:00:00.000Z" },
+    { "id": "pay_d15", "loanId": "loan_demo_store", "amount": 600, "date": "2026-03-01", "note": "آخر قسط — تم السداد", "createdAt": "2026-03-01T09:00:00.000Z" }
+  ]
+}

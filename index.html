@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="متابعة الديون والأقساط وتسجيل الدفعات — يعمل بدون إنترنت والبيانات محفوظة على جهازك.">
+  <title>ديوني — متابعة الأقساط والسداد</title>
+
+  <link rel="stylesheet" href="assets/css/01-tokens.css">
+  <link rel="stylesheet" href="assets/css/02-base.css">
+  <link rel="stylesheet" href="assets/css/03-components.css">
+  <link rel="stylesheet" href="assets/css/04-views.css">
+</head>
+<body>
+
+  <!-- ===== الشريط العلوي ===== -->
+  <header class="appbar">
+    <div class="appbar__inner">
+      <span id="appbarBack"></span>
+      <h1 class="appbar__title" id="pageTitle">ديوني</h1>
+      <div class="appbar__actions" id="appbarActions"></div>
+    </div>
+  </header>
+
+  <!-- ===== محتوى الشاشة ===== -->
+  <main class="screen" id="view" aria-live="polite"></main>
+
+  <!-- ===== التنقّل السفلي ===== -->
+  <nav class="tabbar" id="tabbar" aria-label="التنقّل الرئيسي">
+    <a class="tab" href="#/" data-tab="/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      <span>الرئيسية</span>
+    </a>
+    <a class="tab" href="#/summary" data-tab="/summary">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>
+      <span>الملخّص</span>
+    </a>
+
+    <button class="tab tab--fab" type="button" data-action="quick-pay" aria-label="تسجيل دفعة">
+      <span class="fab">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      </span>
+      <span class="tab--fab__label">سدّد</span>
+    </button>
+
+    <a class="tab" href="#/loans" data-tab="/loans">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v12H3z"/><path d="M3 11h18"/><path d="M7 15h4"/></svg>
+      <span>الديون</span>
+    </a>
+    <a class="tab" href="#/settings" data-tab="/settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>
+      <span>الإعدادات</span>
+    </a>
+  </nav>
+
+  <!-- ===== حاويات الطبقات العلوية ===== -->
+  <div id="sheetRoot"></div>
+  <div id="toastRoot" class="toast-root" aria-live="assertive"></div>
+
+  <!-- ===== النواة ===== -->
+  <script src="assets/js/core/config.js"></script>
+  <script src="assets/js/core/utils.js"></script>
+  <script src="assets/js/core/format.js"></script>
+  <script src="assets/js/core/store.js"></script>
+  <script src="assets/js/core/calc.js"></script>
+  <script src="assets/js/core/backup.js"></script>
+  <script src="assets/js/core/router.js"></script>
+
+  <!-- ===== واجهة مشتركة ===== -->
+  <script src="assets/js/ui/dom.js"></script>
+  <script src="assets/js/ui/toast.js"></script>
+  <script src="assets/js/ui/sheet.js"></script>
+  <script src="assets/js/ui/widgets.js"></script>
+
+  <!-- ===== نماذج الإدخال ===== -->
+  <script src="assets/js/forms/loan-form.js"></script>
+  <script src="assets/js/forms/payment-form.js"></script>
+  <script src="assets/js/forms/income-form.js"></script>
+
+  <!-- ===== الشاشات ===== -->
+  <script src="assets/js/views/home.js"></script>
+  <script src="assets/js/views/summary.js"></script>
+  <script src="assets/js/views/loans.js"></script>
+  <script src="assets/js/views/loan-detail.js"></script>
+  <script src="assets/js/views/history.js"></script>
+  <script src="assets/js/views/settings.js"></script>
+
+  <!-- ===== التشغيل ===== -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
