@@ -76,6 +76,13 @@
     'currency':     function () { App.settingsSheets.currency(); },
     'alert-days':   function () { App.settingsSheets.alertDays(); },
     'theme':        function () { cycleTheme(); App.render(); },
+    'toggle-sharing': function () {
+      var on = !App.store.state.settings.sharingEnabled;
+      App.store.setSettings({ sharingEnabled: on });
+      App.toast.ok(on
+        ? 'فُعّلت المشاركة — أضف المشاركين من صفحة أي دين'
+        : 'أُلغيت المشاركة — بيانات المشاركين محفوظة');
+    },
     'back':         function () { App.router.back(); },
     'reset':        function () {
       App.sheet.confirm({

@@ -6,7 +6,7 @@
    ⚠️ ارفع رقم النسخة عند أي تعديل في الملفات لتُحدَّث النسخة المخزّنة.
    ============================================================ */
 
-const VERSION = 'duyuni-v1';
+const VERSION = 'duyuni-v2';
 const SHELL = [
   './',
   './index.html',
@@ -71,10 +71,12 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   if (new URL(req.url).origin !== self.location.origin) return;
 
-  // التنقّل: أعِد الصفحة المخزّنة فورًا (التطبيق يوجّه نفسه بالـhash)
+  // التنقّل: الصفحة المطلوبة نفسها من الذاكرة، ثم الشبكة،
+  // وأخيرًا index.html كخطّة بديلة عند انقطاع الشبكة (التطبيق يوجّه نفسه بالـhash)
   if (req.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then((cached) => cached || fetch(req))
+      caches.match(req, { ignoreSearch: true })
+        .then((cached) => cached || fetch(req).catch(() => caches.match('./index.html')))
     );
     return;
   }

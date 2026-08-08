@@ -117,6 +117,14 @@
 .sched__row.is-next { background: color-mix(in srgb, var(--brand-soft) 60%, transparent); }
 .sched__amt { margin-inline-start: auto; font-weight: 700; }
 
+/* ---------- توزيع السداد على المشاركين ---------- */
+.contrib {
+  padding: 12px var(--pad);
+  border-bottom: 1px solid var(--line);
+}
+.contrib:last-child { border-bottom: 0; }
+.contrib b { font-size: .95rem; font-weight: 800; }
+
 /* ---------- سجل الدفعات ---------- */
 .pay-row {
   display: flex; align-items: center; gap: 11px;

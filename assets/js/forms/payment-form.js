@@ -42,6 +42,23 @@
     if (over > 0.01) {
       rows += W.kv('فائض عن المطلوب', '<span class="t-warn">' + F.moneyHtml(over) + '</span>');
     }
+
+    // إن كان للدين مشاركون: نبيّن أثر الدفعة على حصّة الدافع نفسه
+    if (App.store.sharingOn() && st.shared) {
+      var payerId = v.payerId || 'me';
+      var who = st.contributors.filter(function (c) { return c.id === payerId; })[0];
+      if (who) {
+        var alreadyHis = (excludePaymentId && (App.store.payment(excludePaymentId) || {}).payerId === payerId)
+          ? U.toNum((App.store.payment(excludePaymentId) || {}).amount) : 0;
+        var hisPaid = U.round2(who.paid - alreadyHis + amount);
+        rows += W.kv('إجمالي ما دفعه ' + who.name, F.moneyHtml(hisPaid));
+        if (who.hasShare) {
+          rows += W.kv('المتبقي على حصّة ' + who.name + ' (' + F.pct(who.sharePct) + ')',
+            F.moneyHtml(Math.max(0, U.round2(who.shareAmount - hisPaid))));
+        }
+      }
+    }
+
     box.innerHTML = rows;
   }
 
@@ -59,6 +76,25 @@
     return '<div class="chips" data-amount-chips>' + chips.map(function (c) {
       return '<button type="button" class="chip" data-val="' + c.val + '">' + c.label + ' · ' + F.num(c.val) + '</button>';
     }).join('') + '</div>';
+  }
+
+  /** اختيار الدافع — يظهر فقط إن كانت الميزة مفعّلة وللدين مشاركون */
+  function payerField(loan, activeId) {
+    if (!App.store.sharingOn() || !loan || !(loan.partners || []).length) {
+      return '<input type="hidden" name="payerId" value="' + U.esc(activeId || 'me') + '">';
+    }
+    var people = [{ id: 'me', name: 'أنا' }].concat(loan.partners);
+    var active = people.filter(function (p) { return p.id === activeId; }).length ? activeId : 'me';
+    return '<div class="field">' +
+      '<span class="field__label">مَن دفع هذه الدفعة؟</span>' +
+      '<div class="chips" data-payer-chips>' +
+        people.map(function (p) {
+          return '<button type="button" class="chip' + (p.id === active ? ' is-active' : '') + '" data-val="' + U.esc(p.id) + '">' +
+            U.esc(p.name) + '</button>';
+        }).join('') +
+      '</div>' +
+      '<input type="hidden" name="payerId" value="' + U.esc(active) + '">' +
+    '</div>';
   }
 
   function dateChips() {
@@ -108,6 +144,8 @@
         ? W.select({ name: 'loanId', label: 'الدين', required: true, value: loan.id, options: loanOptions(loan.id) })
         : '<input type="hidden" name="loanId" value="' + U.esc(loan.id) + '">') +
 
+      '<div data-payer-slot>' + payerField(loan, editing ? editing.payerId : (opt.payerId || 'me')) + '</div>' +
+
       W.money({ name: 'amount', label: 'المبلغ المدفوع', required: true, value: defaultAmount, autofocus: true }) +
       '<div data-chips-slot>' + amountChips(st) + '</div>' +
 
@@ -132,6 +170,16 @@
         var form = el.querySelector('[data-form]');
         refreshImpact(form, opt.paymentId);
 
+        // اختيار الدافع
+        el.addEventListener('click', function (e) {
+          var pc = e.target.closest('[data-payer-chips] .chip');
+          if (!pc) return;
+          D.$$('[data-payer-chips] .chip', el).forEach(function (c) { c.classList.remove('is-active'); });
+          pc.classList.add('is-active');
+          form.querySelector('[name="payerId"]').value = pc.getAttribute('data-val');
+          refreshImpact(form, opt.paymentId);
+        });
+
         el.addEventListener('click', function (e) {
           var chip = e.target.closest('[data-amount-chips] .chip, [data-date-chips] .chip');
           if (!chip) return;
@@ -151,6 +199,8 @@
             if (!l) return;
             var s2 = App.calc.loanStats(l);
             form.querySelector('[data-chips-slot]').innerHTML = amountChips(s2);
+            // مشاركو الدين الجديد يختلفون — نُعيد بناء اختيار الدافع
+            form.querySelector('[data-payer-slot]').innerHTML = payerField(l, 'me');
             if (!editing) form.querySelector('[name="amount"]').value = U.round2(Math.min(s2.installment, s2.remaining) || s2.installment);
             refreshImpact(form, opt.paymentId);
           });
@@ -186,7 +236,13 @@
           if (!v.loanId || !App.store.loan(v.loanId)) { W.showError(form, 'loanId', 'اختر الدين'); errors++; }
           if (errors) { App.toast.error('راجع الحقول المطلوبة'); return; }
 
-          var payload = { loanId: v.loanId, amount: amount, date: v.date, note: String(v.note || '').trim() };
+          var payload = {
+            loanId: v.loanId,
+            amount: amount,
+            date: v.date,
+            payerId: v.payerId || 'me',
+            note: String(v.note || '').trim()
+          };
 
           if (editing) {
             App.store.updatePayment(opt.paymentId, payload);

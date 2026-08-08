@@ -22,6 +22,7 @@
     chevron:  '<path d="M14 6l-6 6 6 6"/>',
     bank:     '<path d="M3 10 12 4l9 6"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
     user:     '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.4-3.6 4-5 7-5s5.6 1.4 7 5"/>',
+    users:    '<circle cx="9.5" cy="8.5" r="3.2"/><path d="M3.5 19.5c1.2-3.2 3.4-4.5 6-4.5s4.8 1.3 6 4.5"/><path d="M16.4 5.7a3.2 3.2 0 0 1 0 5.6"/><path d="M18.2 15.6c1.3.7 2.2 1.9 2.8 3.9"/>',
     store:    '<path d="M4 9h16l-1 11H5L4 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/>',
     tag:      '<path d="M20 12.5 12.5 20 4 11.5V4h7.5L20 12.5Z"/><circle cx="8" cy="8" r="1.3"/>',
     wallet:   '<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H18a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8.5Z"/><path d="M16 12.5h2"/>',

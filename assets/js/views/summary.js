@@ -8,6 +8,35 @@
 
   var U = App.utils, F = App.format, W = App.widgets, D = App.dom;
 
+  /* ---------- من سدّد؟ (يظهر فقط إن فُعّلت المشاركة ووُجد مشاركون) ---------- */
+  function payers(ov) {
+    if (!App.store.sharingOn() || !ov.sharedLoansCount || ov.payers.length < 2) return '';
+    var max = ov.payers.reduce(function (a, p) { return Math.max(a, p.paid); }, 0) || 1;
+
+    return W.sectionTitle('من سدّد؟',
+        '<span class="t-xs t-muted">' + F.num(ov.sharedLoansCount) + ' دين مشترك</span>') +
+      '<div class="card card--flush">' +
+        ov.payers.map(function (p) {
+          var share = ov.paid > 0 ? U.round2((p.paid / ov.paid) * 100) : 0;
+          return '<div class="contrib">' +
+            '<div class="row">' +
+              '<span class="avatar' + (p.isMe ? '' : ' avatar--ok') + '">' +
+                (p.isMe ? D.icon('user') : U.esc(U.initials(p.name))) + '</span>' +
+              '<div class="grow" style="min-width:0">' +
+                '<div class="t-sm t-bold truncate">' + U.esc(p.name) + '</div>' +
+                '<div class="t-xs t-muted">' + F.pct(share) + ' من إجمالي المسدَّد · في ' +
+                  F.num(p.loans) + (p.loans === 1 ? ' دين' : ' ديون') + '</div>' +
+              '</div>' +
+              '<b class="money">' + F.num(p.paid) + '</b>' +
+            '</div>' +
+            '<div style="margin-top:8px">' + W.bar(U.round2((p.paid / max) * 100), true, !p.isMe) + '</div>' +
+          '</div>';
+        }).join('') +
+        '<div class="kv__row kv__row--total"><span>دفع الآخرون معك</span><span class="t-ok">' +
+          F.moneyHtml(ov.paidByOthers) + '</span></div>' +
+      '</div>';
+  }
+
   function distribution(ov) {
     if (!ov.active.length) return '';
     var max = ov.active.reduce(function (a, x) { return Math.max(a, x.remaining); }, 0) || 1;
@@ -135,7 +164,7 @@
               '<button class="btn btn--soft btn--block" data-action="edit-income">' + D.icon('salary') + ' إدخال الراتب</button>' +
             '</div>');
 
-      return amounts + installments + timeline + salary + distribution(ov) +
+      return amounts + installments + timeline + payers(ov) + salary + distribution(ov) +
         '<button class="btn btn--ghost btn--block" data-action="export">' + D.icon('download') + ' تصدير نسخة من بياناتي</button>';
     }
   };

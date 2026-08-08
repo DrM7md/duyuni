@@ -62,6 +62,9 @@
     var sub = [];
     if (loan.lender) sub.push(U.esc(loan.lender));
     sub.push(D.lenderLabel(loan.type));
+    if (App.store.sharingOn() && st.shared) {
+      sub.push('مشترك مع ' + F.num(loan.partners.length) + (loan.partners.length === 1 ? ' شخص' : ' أشخاص'));
+    }
 
     var footRight = st.finished
       ? 'اكتمل السداد ' + (st.lastPaymentDate ? 'في ' + F.dateShort(st.lastPaymentDate) : '')

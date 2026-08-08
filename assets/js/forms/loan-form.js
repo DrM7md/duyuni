@@ -28,6 +28,87 @@
     '</div>';
   }
 
+  /* ============================================================
+     المشاركون في السداد — قسم اختياري يظهر فقط إن فُعّلت الميزة
+     ============================================================ */
+
+  function partnerRow(p) {
+    var id = (p && p.id) || U.uid('prt');
+    var pct = p && U.toNum(p.sharePct) > 0 ? U.esc(p.sharePct) : '';
+    return '<div class="partner-row" data-prt="' + U.esc(id) + '">' +
+      '<input class="input grow" data-prt-name placeholder="اسم المشارك" value="' + U.esc(p ? p.name : '') + '">' +
+      '<div class="input-group partner-row__pct">' +
+        '<input class="input" data-prt-pct type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="حصّة" value="' + pct + '">' +
+        '<span class="input-group__suffix">%</span>' +
+      '</div>' +
+      '<button type="button" class="partner-row__rm" data-prt-rm aria-label="إزالة المشارك">' + D.icon('trash') + '</button>' +
+    '</div>';
+  }
+
+  function partnersSection(loan) {
+    if (!App.store.sharingOn()) return '';
+    var partners = (loan && loan.partners) || [];
+    return '<hr style="border:0;border-top:1px solid var(--line)">' +
+      '<div class="field" data-partners-field>' +
+        '<span class="field__label">المشاركون في السداد</span>' +
+        '<span class="field__hint">أشخاص يدفعون معك في هذا الدين. «الحصّة» نسبته من إجمالي الدين — اتركها فارغة إن كان يساعدك بمبالغ غير محدّدة.</span>' +
+        '<div data-partners-list>' + partners.map(partnerRow).join('') + '</div>' +
+        '<div class="row" style="gap:8px">' +
+          '<button type="button" class="btn btn--soft btn--sm" data-prt-add>' + D.icon('plus') + ' إضافة مشارك</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-prt-equal>قسمة بالتساوي</button>' +
+        '</div>' +
+        '<div class="card card--soft" data-prt-preview></div>' +
+        '<span class="field__err hidden" data-err-for="partners"></span>' +
+      '</div>';
+  }
+
+  /** قراءة المشاركين من النموذج (نتجاهل الصفوف بلا اسم) */
+  function readPartners(scope) {
+    return D.$$('[data-prt]', scope).map(function (rowEl) {
+      return {
+        id: rowEl.getAttribute('data-prt'),
+        name: rowEl.querySelector('[data-prt-name]').value.trim(),
+        sharePct: U.toNum(rowEl.querySelector('[data-prt-pct]').value)
+      };
+    }).filter(function (p) { return p.name; });
+  }
+
+  /** ملخّص حيّ للحصص: نسبتي وقيمة حصّة كل مشارك */
+  function refreshPartners(scope) {
+    var box = scope.querySelector('[data-prt-preview]');
+    if (!box) return;
+    var v = W.values(scope);
+    var total = U.round2(U.toNum(v.installmentAmount) * Math.round(U.toNum(v.installmentsCount)));
+    var partners = readPartners(scope);
+
+    if (!partners.length) {
+      box.innerHTML = '<div class="kv__row"><span class="t-muted">لا مشاركين — الدين كلّه عليك</span><span>—</span></div>';
+      return;
+    }
+
+    var sum = U.round2(partners.reduce(function (a, p) { return a + p.sharePct; }, 0));
+    var myPct = U.round2(Math.max(0, 100 - sum));
+    var amount = function (pct) { return total ? F.moneyHtml(U.round2(total * pct / 100)) : '—'; };
+
+    var rows = W.kv('حصّتك أنت (' + F.pct(myPct) + ')', amount(myPct));
+    partners.forEach(function (p) {
+      rows += W.kv(p.name + (p.sharePct > 0 ? ' (' + F.pct(p.sharePct) + ')' : ' — بلا حصّة محدّدة'),
+        p.sharePct > 0 ? amount(p.sharePct) : '—');
+    });
+    if (sum > 100) rows += W.kv('تنبيه', '<span class="t-danger">مجموع الحصص ' + F.pct(sum) + ' وهو أكبر من 100%</span>');
+    box.innerHTML = rows;
+  }
+
+  /** توزيع الحصص بالتساوي بينك وبين المشاركين */
+  function splitEqually(scope) {
+    var rows = D.$$('[data-prt]', scope).filter(function (r) { return r.querySelector('[data-prt-name]').value.trim(); });
+    if (!rows.length) { App.toast.error('أضف مشاركًا واكتب اسمه أوّلًا'); return; }
+    var people = rows.length + 1;                       // أنا + المشاركون
+    var each = Math.floor((100 / people) * 100) / 100;   // نصيب كل مشارك
+    rows.forEach(function (r) { r.querySelector('[data-prt-pct]').value = each; });
+    refreshPartners(scope);
+  }
+
   /** حساب وعرض الملخّص الحيّ أثناء الكتابة */
   function refreshPreview(scope) {
     var v = W.values(scope);
@@ -90,6 +171,9 @@
 
       W.money({ name: 'openingPaid', label: 'مبلغ سُدّد قبل استخدام التطبيق', value: loan ? loan.openingPaid : '',
                 hint: 'اتركه فارغًا إن لم تسدّد شيئًا بعد. الدفعات التي تسجّلها لاحقًا تُضاف عليه.' }) +
+
+      partnersSection(loan) +
+
       W.textarea({ name: 'notes', label: 'ملاحظات', placeholder: 'رقم العقد، شروط، أي تفاصيل تريد تذكّرها',
                    value: loan ? loan.notes : '' }) +
 
@@ -104,6 +188,7 @@
       onMount: function (el, api) {
         var form = el.querySelector('[data-form]');
         refreshPreview(form);
+        refreshPartners(form);
 
         // رقائق النوع
         el.addEventListener('click', function (e) {
@@ -115,9 +200,38 @@
           }
         });
 
+        // أزرار المشاركين
+        el.addEventListener('click', function (e) {
+          if (e.target.closest('[data-prt-add]')) {
+            var list = form.querySelector('[data-partners-list]');
+            list.insertAdjacentHTML('beforeend', partnerRow(null));
+            var inputs = D.$$('[data-prt-name]', list);
+            if (inputs.length) inputs[inputs.length - 1].focus();
+            refreshPartners(form);
+            return;
+          }
+          if (e.target.closest('[data-prt-equal]')) { splitEqually(form); return; }
+
+          var rm = e.target.closest('[data-prt-rm]');
+          if (rm) {
+            var rowEl = rm.closest('[data-prt]');
+            var pid = rowEl.getAttribute('data-prt');
+            // نمنع إزالة مشارك له دفعات مسجّلة حتى لا تُفقد نسبة دفعاته
+            var n = isEdit ? App.store.partnerPaymentsCount(loanId, pid) : 0;
+            if (n > 0) {
+              W.showError(form, 'partners',
+                'لا يمكن إزالة «' + rowEl.querySelector('[data-prt-name]').value.trim() + '» لأن له ' +
+                F.num(n) + ' دفعة مسجّلة — احذف دفعاته أو غيّر الدافع فيها أوّلًا.');
+              return;
+            }
+            rowEl.remove();
+            refreshPartners(form);
+          }
+        });
+
         // تحديث الملخّص الحيّ
         ['input', 'change'].forEach(function (ev) {
-          form.addEventListener(ev, function () { refreshPreview(form); });
+          form.addEventListener(ev, function () { refreshPreview(form); refreshPartners(form); });
         });
 
         // حذف الدين
@@ -150,6 +264,17 @@
           if (count < 1) { W.showError(form, 'installmentsCount', 'عدد الأقساط لا يقلّ عن 1'); errors++; }
           if (inst <= 0) { W.showError(form, 'installmentAmount', 'أدخل قيمة القسط'); errors++; }
           if (!U.isValidISO(v.startDate)) { W.showError(form, 'startDate', 'أدخل تاريخًا صحيحًا'); errors++; }
+
+          // المشاركون: مجموع الحصص لا يتجاوز 100%
+          var partners = App.store.sharingOn() ? readPartners(form) : ((loan && loan.partners) || []);
+          if (App.store.sharingOn()) {
+            var sumPct = U.round2(partners.reduce(function (a, p) { return a + p.sharePct; }, 0));
+            if (sumPct > 100) {
+              W.showError(form, 'partners', 'مجموع حصص المشاركين ' + F.pct(sumPct) + ' — لا يجوز أن يتجاوز 100%');
+              errors++;
+            }
+          }
+
           if (errors) { App.toast.error('راجع الحقول المطلوبة'); return; }
 
           var total = U.round2(inst * count);
@@ -164,6 +289,7 @@
             installmentsCount: count,
             startDate: v.startDate,
             openingPaid: openingPaid,
+            partners: partners,
             notes: String(v.notes || '').trim()
           };
 

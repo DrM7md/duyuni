@@ -176,6 +176,16 @@
     });
   }
 
+  /* ---------- صفّ بمفتاح تفعيل ---------- */
+  function switchRow(icon, title, hint, action, on) {
+    return '<button class="list__item" type="button" data-action="' + action + '">' +
+      '<span class="avatar">' + D.icon(icon) + '</span>' +
+      '<span class="grow"><span class="t-sm t-bold" style="display:block">' + U.esc(title) + '</span>' +
+      '<span class="t-xs t-muted">' + hint + '</span></span>' +
+      '<span class="switch' + (on ? ' is-on' : '') + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"></span>' +
+    '</button>';
+  }
+
   /* ---------- صفّ إعداد ---------- */
   function row(icon, title, value, action, danger) {
     return '<button class="list__item" type="button" ' + (action ? 'data-action="' + action + '"' : '') + '>' +
@@ -215,6 +225,19 @@
           row('clock', 'التنبيه قبل موعد القسط', F.days(s.alertDays), 'alert-days') +
           row(s.theme === 'dark' ? 'moon' : 'sun', 'المظهر', themeLabel, 'theme') +
         '</div></div>' +
+
+        W.sectionTitle('ميزات اختيارية') +
+        '<div class="card card--flush"><div class="list">' +
+          switchRow('users', 'المشاركة في السداد',
+            s.sharingEnabled
+              ? 'مفعّلة — يمكنك إضافة مشاركين لكل دين وتسجيل مَن دفع'
+              : 'معطّلة — فعّلها إن كان أحد يسدّد معك جزءًا من دين',
+            'toggle-sharing', s.sharingEnabled) +
+        '</div></div>' +
+        (!s.sharingEnabled && App.store.loansWithPartners()
+          ? '<div class="note-box">' + D.icon('info') + '<span>لديك <b class="num">' +
+            F.num(App.store.loansWithPartners()) + '</b> دين فيه مشاركون — بياناتهم محفوظة ولم تُحذف، وتظهر مباشرة عند تفعيل الميزة.</span></div>'
+          : '') +
 
         W.sectionTitle('النسخ الاحتياطي') +
         '<div class="card card--flush"><div class="list">' +

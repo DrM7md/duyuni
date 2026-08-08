@@ -50,8 +50,42 @@
       '<div class="card card--flush"><div class="sched">' + rows + '</div>' + toggle + '</div>';
   }
 
+  /* ---------- توزيع السداد بين صاحب الدين والمشاركين ---------- */
+  function contributors(st) {
+    if (!App.store.sharingOn() || !st.shared) return '';
+
+    var rows = st.contributors.map(function (c) {
+      var right = c.hasShare
+        ? '<b class="money">' + F.num(c.paid) + '</b>' +
+          '<div class="t-xs t-muted">من <span class="num">' + F.num(c.shareAmount) + '</span></div>'
+        : '<b class="money">' + F.num(c.paid) + '</b><div class="t-xs t-muted">مدفوع</div>';
+      var sub = c.hasShare
+        ? 'حصّته ' + F.pct(c.sharePct) + ' · ' + (c.remaining > 0 ? 'متبقٍ عليه ' + F.money(c.remaining) : 'أكمل حصّته ✓')
+        : 'بلا حصّة محدّدة · ' + F.installments(c.paymentsCount).replace('قسط', 'دفعة').replace('أقساط', 'دفعات');
+
+      return '<div class="contrib">' +
+        '<div class="row">' +
+          '<span class="avatar' + (c.hasShare && c.remaining === 0 ? ' avatar--ok' : '') + '">' +
+            (c.isMe ? D.icon('user') : U.esc(U.initials(c.name))) + '</span>' +
+          '<div class="grow" style="min-width:0">' +
+            '<div class="t-sm t-bold truncate">' + U.esc(c.name) +
+              (c.isMe ? ' <span class="badge badge--brand">صاحب الدين</span>' : '') + '</div>' +
+            '<div class="t-xs t-muted">' + sub + '</div>' +
+          '</div>' +
+          '<div style="text-align:end;flex-shrink:0">' + right + '</div>' +
+        '</div>' +
+        (c.progress !== null ? '<div style="margin-top:8px">' + W.bar(c.progress, true, c.remaining === 0) + '</div>' : '') +
+      '</div>';
+    }).join('');
+
+    return W.sectionTitle('توزيع السداد',
+        '<span class="t-xs t-muted">دفع الآخرون ' + F.money(st.paidByOthers) + '</span>') +
+      '<div class="card card--flush">' + rows + '</div>';
+  }
+
   /* ---------- دفعات هذا الدين ---------- */
   function payments(st) {
+    var showPayer = App.store.sharingOn() && st.shared;
     if (!st.payments.length) {
       return W.sectionTitle('الدفعات المسجّلة') +
         '<div class="card center t-sm t-muted" style="padding:20px">' +
@@ -63,10 +97,12 @@
     return W.sectionTitle('الدفعات المسجّلة',
         '<span class="t-xs t-muted">' + F.num(st.payments.length) + ' دفعة · ' + F.money(st.loggedPaid) + '</span>') +
       '<div class="card card--flush">' + st.payments.map(function (p) {
+        var payer = (showPayer && (p.payerId || 'me') !== 'me')
+          ? ' <span class="badge">' + U.esc(App.calc.payerName(p)) + '</span>' : '';
         return '<button class="pay-row" data-action="edit-payment" data-id="' + p.id + '">' +
           '<span class="avatar avatar--ok">' + D.icon('check') + '</span>' +
           '<span class="grow" style="min-width:0">' +
-            '<span class="t-sm t-bold" style="display:block"><time>' + F.dateShort(p.date) + '</time></span>' +
+            '<span class="t-sm t-bold" style="display:block"><time>' + F.dateShort(p.date) + '</time>' + payer + '</span>' +
             (p.note ? '<span class="t-xs t-muted truncate" style="display:block">' + U.esc(p.note) + '</span>' : '') +
           '</span>' +
           '<span class="pay-row__amt money">' + F.num(p.amount) + '</span>' +
@@ -157,6 +193,13 @@
           W.kv('المسدَّد', '<span class="t-ok">' + F.moneyHtml(st.paid) + '</span>') +
           (loan.openingPaid > 0 ? W.kv('منه مبلغ سابق قبل التطبيق', F.moneyHtml(loan.openingPaid)) : '') +
           W.kv('المتبقي', '<span class="t-danger">' + F.moneyHtml(st.remaining) + '</span>') +
+          (App.store.sharingOn() && st.shared
+            ? W.kv('منه دفع الآخرون', '<span class="t-ok">' + F.moneyHtml(st.paidByOthers) + '</span>') +
+              (st.me.hasShare
+                ? W.kv('المتبقي على حصّتك أنت (' + F.pct(st.me.sharePct) + ')',
+                    '<span class="t-danger">' + F.moneyHtml(st.me.remaining) + '</span>')
+                : '')
+            : '') +
           W.kv('الأقساط المدفوعة', '<span class="num">' + F.num(st.paidInstallments) + ' / ' + F.num(st.count) + '</span>') +
           W.kv('الأقساط المتبقية', '<span class="num">' + F.num(st.remainingInstallments) + '</span>') +
           (st.finished ? '' : W.kv('القسط القادم', '<time>' + F.dateShort(st.nextDueDate) + '</time> <span class="t-xs t-muted">(' + F.relativeDue(st.nextDueDate) + ')</span>')) +
@@ -168,7 +211,7 @@
         ? '<div class="note-box">' + D.icon('info') + '<span>' + U.esc(loan.notes).replace(/\n/g, '<br>') + '</span></div>'
         : '';
 
-      return hero + warn + actionBtns + info + progressCard + schedule(st) + payments(st) + notes +
+      return hero + warn + actionBtns + info + progressCard + contributors(st) + schedule(st) + payments(st) + notes +
         '<button class="btn btn--ghost btn--block" data-action="edit-loan" data-id="' + loan.id + '">' +
           D.icon('edit') + ' تعديل بيانات الدين</button>';
     },

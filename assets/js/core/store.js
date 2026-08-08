@@ -19,6 +19,7 @@
         otherIncome: 0,            // دخل إضافي شهري
         alertDays: App.config.DEFAULT_ALERT_DAYS,
         theme: 'auto',             // auto | light | dark
+        sharingEnabled: false,     // ميزة المشاركين في السداد (اختيارية)
         lastBackupAt: null,
         createdAt: new Date().toISOString()
       },
@@ -77,6 +78,7 @@
       base.settings.otherIncome   = U.toNum(s.otherIncome);
       base.settings.alertDays     = U.clamp(Math.round(U.toNum(s.alertDays) || App.config.DEFAULT_ALERT_DAYS), 1, 60);
       base.settings.theme         = ['auto', 'light', 'dark'].indexOf(s.theme) > -1 ? s.theme : 'auto';
+      base.settings.sharingEnabled = !!s.sharingEnabled;
       base.settings.lastBackupAt  = s.lastBackupAt || null;
       base.settings.createdAt     = s.createdAt || base.settings.createdAt;
 
@@ -93,21 +95,28 @@
           installmentsCount: count,
           startDate: U.isValidISO(l.startDate) ? String(l.startDate).slice(0, 10) : U.today(),
           openingPaid: U.round2(l.openingPaid),   // ما سُدّد قبل استخدام التطبيق
+          partners: store.cleanPartners(l.partners),
           notes: String(l.notes || ''),
           archived: !!l.archived,
           createdAt: l.createdAt || new Date().toISOString()
         };
       });
 
-      var ids = base.loans.map(function (l) { return l.id; });
+      var byId = {};
+      base.loans.forEach(function (l) { byId[l.id] = l; });
+
       base.payments = (Array.isArray(data.payments) ? data.payments : [])
-        .filter(function (p) { return p && ids.indexOf(p.loanId) > -1; })
+        .filter(function (p) { return p && byId[p.loanId]; })
         .map(function (p) {
+          // الدافع: «أنا» افتراضًا، أو مشارك موجود فعلًا في هذا الدين
+          var payer = String(p.payerId || 'me');
+          var exists = byId[p.loanId].partners.some(function (x) { return x.id === payer; });
           return {
             id: p.id || U.uid('pay'),
             loanId: p.loanId,
             amount: U.round2(p.amount),
             date: U.isValidISO(p.date) ? String(p.date).slice(0, 10) : U.today(),
+            payerId: exists ? payer : 'me',
             note: String(p.note || ''),
             createdAt: p.createdAt || new Date().toISOString()
           };
@@ -115,6 +124,44 @@
         .filter(function (p) { return p.amount > 0; });
 
       return base;
+    },
+
+    /* ---------- المشاركون في السداد ----------
+       كل مشارك: { id, name, sharePct }
+       sharePct = نسبته من إجمالي الدين (0 = مشارك بلا حصّة محدّدة) */
+    cleanPartners: function (list) {
+      if (!Array.isArray(list)) return [];
+      var out = [];
+      list.forEach(function (p) {
+        if (!p) return;
+        var name = String(p.name || '').trim();
+        if (!name) return;
+        out.push({
+          id: p.id || U.uid('prt'),
+          name: name.slice(0, 60),
+          sharePct: U.clamp(U.round2(p.sharePct), 0, 100)
+        });
+      });
+      return out.slice(0, 10);
+    },
+
+    partner: function (loan, id) {
+      if (!loan || !loan.partners) return null;
+      return loan.partners.filter(function (p) { return p.id === id; })[0] || null;
+    },
+
+    /** هل لهذا المشارك دفعات مسجّلة؟ (نمنع حذفه حتى لا تُفقد نسبة الدفعات) */
+    partnerPaymentsCount: function (loanId, partnerId) {
+      return this.state.payments.filter(function (p) {
+        return p.loanId === loanId && p.payerId === partnerId;
+      }).length;
+    },
+
+    sharingOn: function () { return !!this.state.settings.sharingEnabled; },
+
+    /** عدد الديون التي فيها مشاركون (لعرضه في الإعدادات) */
+    loansWithPartners: function () {
+      return this.state.loans.filter(function (l) { return (l.partners || []).length > 0; }).length;
     },
 
     /* ---------- الديون ---------- */
@@ -137,6 +184,7 @@
         installmentsCount: Math.max(1, Math.round(U.toNum(data.installmentsCount))),
         startDate: data.startDate || U.today(),
         openingPaid: U.round2(data.openingPaid),
+        partners: this.cleanPartners(data.partners),
         notes: data.notes || '',
         archived: false,
         createdAt: new Date().toISOString()
@@ -150,6 +198,12 @@
       var loan = this.loan(id);
       if (!loan) return null;
       Object.keys(patch).forEach(function (k) { loan[k] = patch[k]; });
+      loan.partners = this.cleanPartners(loan.partners);
+      // أي دفعة لمشارك أُزيل تُعاد إلى «أنا» حتى لا تبقى معلّقة
+      var valid = loan.partners.map(function (p) { return p.id; });
+      this.state.payments.forEach(function (p) {
+        if (p.loanId === loan.id && p.payerId !== 'me' && valid.indexOf(p.payerId) === -1) p.payerId = 'me';
+      });
       loan.principal = U.round2(loan.principal);
       loan.totalDue = U.round2(loan.totalDue);
       loan.openingPaid = U.round2(loan.openingPaid);
@@ -184,11 +238,14 @@
     },
 
     addPayment: function (data) {
+      var loan = this.loan(data.loanId);
+      var payer = data.payerId && this.partner(loan, data.payerId) ? data.payerId : 'me';
       var pay = {
         id: U.uid('pay'),
         loanId: data.loanId,
         amount: U.round2(data.amount),
         date: data.date || U.today(),
+        payerId: payer,
         note: data.note || '',
         createdAt: new Date().toISOString()
       };
@@ -202,6 +259,7 @@
       if (!pay) return null;
       Object.keys(patch).forEach(function (k) { pay[k] = patch[k]; });
       pay.amount = U.round2(pay.amount);
+      if (pay.payerId !== 'me' && !this.partner(this.loan(pay.loanId), pay.payerId)) pay.payerId = 'me';
       this.commit();
       return pay;
     },

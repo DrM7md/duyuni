@@ -24,14 +24,66 @@
   };
 
   /**
+   * توزيع السداد على المشاركين في دين واحد.
+   * «أنا» صاحب الدين، وحصّتي = ما بقي من النسب بعد المشاركين،
+   * ويُحسب عليّ أيضًا أي مبلغ سُدّد قبل استخدام التطبيق.
+   * @returns [{id, name, isMe, sharePct, shareAmount, paid, remaining, progress, hasShare}]
+   */
+  C.contributors = function (loan, pays) {
+    pays = pays || App.store.payments(loan.id);
+    var partners = loan.partners || [];
+    var total = U.round2(loan.totalDue);
+
+    var paidBy = { me: U.toNum(loan.openingPaid) };
+    pays.forEach(function (p) {
+      var k = p.payerId || 'me';
+      paidBy[k] = U.round2((paidBy[k] || 0) + U.toNum(p.amount));
+    });
+
+    var partnersPct = U.round2(partners.reduce(function (a, p) { return a + U.toNum(p.sharePct); }, 0));
+    var myPct = U.round2(Math.max(0, 100 - partnersPct));
+
+    function make(id, name, isMe, pct) {
+      var hasShare = pct > 0;
+      var shareAmount = U.round2(total * (pct / 100));
+      var paid = U.round2(paidBy[id] || 0);
+      return {
+        id: id,
+        name: name,
+        isMe: !!isMe,
+        sharePct: pct,
+        shareAmount: shareAmount,
+        paid: paid,
+        remaining: hasShare ? U.round2(Math.max(0, shareAmount - paid)) : null,
+        progress: (hasShare && shareAmount > 0) ? U.round2(Math.min(100, (paid / shareAmount) * 100)) : null,
+        hasShare: hasShare,
+        paymentsCount: pays.filter(function (p) { return (p.payerId || 'me') === id; }).length
+      };
+    }
+
+    var out = [make('me', 'أنا', true, myPct)];
+    partners.forEach(function (p) { out.push(make(p.id, p.name, false, U.round2(p.sharePct))); });
+    return out;
+  };
+
+  /** اسم مَن دفع دفعةً معيّنة */
+  C.payerName = function (payment) {
+    var pid = payment.payerId || 'me';
+    if (pid === 'me') return 'أنا';
+    var p = App.store.partner(App.store.loan(payment.loanId), pid);
+    return p ? p.name : 'مشارك محذوف';
+  };
+
+  /**
    * إحصاءات دين واحد.
    * @returns كائن يحتوي المسدَّد، المتبقي، عدد الأقساط المدفوعة/المتبقية،
-   *          التأخير، القسط القادم، تاريخ الانتهاء، والحالة.
+   *          التأخير، القسط القادم، تاريخ الانتهاء، والحالة، وتوزيع المشاركين.
    */
   C.loanStats = function (loan) {
     var pays = App.store.payments(loan.id);
     var logged = U.sum(pays, function (p) { return p.amount; });
     var paid = U.round2(U.toNum(loan.openingPaid) + logged);
+    var contribs = C.contributors(loan, pays);
 
     var total = U.round2(loan.totalDue);
     var count = Math.max(1, loan.installmentsCount);
@@ -91,7 +143,13 @@
       daysToEnd: U.diffDays(today, endDate),
       monthsToEnd: Math.max(0, remainingInst),
       schedule: dates,
-      lastPaymentDate: pays.length ? pays[0].date : null
+      lastPaymentDate: pays.length ? pays[0].date : null,
+
+      /* توزيع السداد بين صاحب الدين والمشاركين */
+      shared: (loan.partners || []).length > 0,
+      contributors: contribs,
+      me: contribs[0],
+      paidByOthers: U.sum(contribs.slice(1), function (c) { return c.paid; })
     };
   };
 
@@ -167,6 +225,29 @@
       daysToFreedom: freedomDate ? U.diffDays(today, freedomDate) : null,
       monthsToFreedom: freedomDate ? Math.max(0, U.diffMonths(today, freedomDate) + 1) : null,
       planMonths: (firstStart && freedomDate) ? Math.max(1, U.diffMonths(firstStart, freedomDate) + 1) : null,
+
+      /* من سدّد؟ تجميع كل الدفعات على الأشخاص (بالاسم) عبر كل الديون */
+      payers: (function () {
+        var map = {}, order = [];
+        stats.forEach(function (st) {
+          st.contributors.forEach(function (c) {
+            if (c.paid <= 0) return;
+            var key = c.isMe ? '__me__' : c.name;
+            if (!map[key]) { map[key] = { name: c.name, isMe: c.isMe, paid: 0, loans: 0 }; order.push(key); }
+            map[key].paid = U.round2(map[key].paid + c.paid);
+            map[key].loans++;
+          });
+        });
+        var list = order.map(function (k) { return map[k]; });
+        list.sort(function (a, b) {          // «أنا» أوّلًا، ثم الأكثر سدادًا
+          if (a.isMe !== b.isMe) return a.isMe ? -1 : 1;
+          return b.paid - a.paid;
+        });
+        return list;
+      })(),
+      paidByOthers: U.sum(stats, function (st) { return st.paidByOthers; }),
+      paidByMe: U.round2(paid - U.sum(stats, function (st) { return st.paidByOthers; })),
+      sharedLoansCount: stats.filter(function (st) { return st.shared; }).length,
 
       overdue: overdue,
       dueSoon: dueSoon,

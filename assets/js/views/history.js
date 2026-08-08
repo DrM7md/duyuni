@@ -43,10 +43,12 @@
           '<div class="month-head"><span>' + F.month(m) + '</span><span class="money">' + F.num(mTotal) + ' ' + U.esc(F.currency()) + '</span></div>' +
           list.map(function (p) {
             var loan = App.store.loan(p.loanId);
+            var payer = (App.store.sharingOn() && (p.payerId || 'me') !== 'me')
+              ? ' <span class="badge">' + U.esc(App.calc.payerName(p)) + '</span>' : '';
             return '<button class="pay-row" data-action="edit-payment" data-id="' + p.id + '">' +
               '<span class="avatar avatar--ok">' + D.icon('check') + '</span>' +
               '<span class="grow" style="min-width:0">' +
-                '<span class="t-sm t-bold truncate" style="display:block">' + U.esc(loan ? loan.title : 'دين محذوف') + '</span>' +
+                '<span class="t-sm t-bold truncate" style="display:block">' + U.esc(loan ? loan.title : 'دين محذوف') + payer + '</span>' +
                 '<span class="t-xs t-muted truncate" style="display:block"><time>' + F.dateShort(p.date) + '</time>' +
                   (p.note ? ' · ' + U.esc(p.note) : '') + '</span>' +
               '</span>' +
