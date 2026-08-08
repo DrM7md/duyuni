@@ -118,6 +118,7 @@
   App.views = App.views || {};
   App.views.home = {
     title: App.config.APP_NAME,
+    layout: 'grid',
 
     actions: function () {
       return '<button class="appbar__btn" data-action="add-loan" aria-label="إضافة دين">' + D.icon('plus') + '</button>';

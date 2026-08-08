@@ -23,6 +23,7 @@
   App.views = App.views || {};
   App.views.loans = {
     title: 'الديون',
+    layout: 'grid',
 
     actions: function () {
       return '<button class="appbar__btn" data-action="add-loan" aria-label="إضافة دين">' + D.icon('plus') + '</button>';

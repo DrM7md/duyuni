@@ -30,6 +30,7 @@
   App.views = App.views || {};
   App.views.summary = {
     title: 'الملخّص',
+    layout: 'grid',
 
     actions: function () {
       return '<a class="appbar__btn" href="#/history" aria-label="سجل الدفعات">' + D.icon('list') + '</a>';

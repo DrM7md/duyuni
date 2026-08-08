@@ -31,6 +31,8 @@
     var samePath = currentPath === path;
     var scrollY = window.scrollY;
 
+    // تخطيط سطح المكتب: شبكة بعمودين للوحات الأرقام، وعمود مريح للصفحات المتسلسلة
+    viewEl.className = 'screen ' + (view.layout === 'grid' ? 'screen--grid' : 'screen--narrow');
     viewEl.innerHTML = view.render(params) || '';
     titleEl.textContent = typeof view.title === 'function' ? view.title(params) : (view.title || App.config.APP_NAME);
     actionsEl.innerHTML = view.actions ? view.actions(params) : '';
