@@ -127,8 +127,10 @@
     },
 
     /* ---------- المشاركون في السداد ----------
-       كل مشارك: { id, name, sharePct }
-       sharePct = نسبته من إجمالي الدين (0 = مشارك بلا حصّة محدّدة) */
+       كل مشارك: { id, name, shareMode, shareValue }
+       shareMode: 'pct' نسبة من إجمالي الدين · 'amount' مبلغ إجمالي محدّد
+                  · 'none' بلا حصّة محدّدة (يساعد بمبالغ متغيّرة)
+       الدفعات الفعلية حرّة دائمًا ولا علاقة لها بالحصّة — الحصّة هدف فقط. */
     cleanPartners: function (list) {
       if (!Array.isArray(list)) return [];
       var out = [];
@@ -136,11 +138,22 @@
         if (!p) return;
         var name = String(p.name || '').trim();
         if (!name) return;
-        out.push({
-          id: p.id || U.uid('prt'),
-          name: name.slice(0, 60),
-          sharePct: U.clamp(U.round2(p.sharePct), 0, 100)
-        });
+
+        var mode = ['pct', 'amount', 'none'].indexOf(p.shareMode) > -1 ? p.shareMode : null;
+        var value = U.round2(p.shareValue);
+
+        // ترحيل الصيغة القديمة: sharePct فقط
+        if (!mode) {
+          var legacy = U.round2(p.sharePct);
+          mode = legacy > 0 ? 'pct' : 'none';
+          value = legacy;
+        }
+        if (mode === 'pct') value = U.clamp(value, 0, 100);
+        if (mode === 'amount') value = Math.max(0, value);
+        if (mode !== 'none' && value <= 0) mode = 'none';
+        if (mode === 'none') value = 0;
+
+        out.push({ id: p.id || U.uid('prt'), name: name.slice(0, 60), shareMode: mode, shareValue: value });
       });
       return out.slice(0, 10);
     },

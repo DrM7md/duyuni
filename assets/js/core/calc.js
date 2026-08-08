@@ -29,6 +29,19 @@
    * ويُحسب عليّ أيضًا أي مبلغ سُدّد قبل استخدام التطبيق.
    * @returns [{id, name, isMe, sharePct, shareAmount, paid, remaining, progress, hasShare}]
    */
+  /**
+   * قيمة حصّة مشارك بالريال — سواءً حُدّدت بنسبة أو بمبلغ إجمالي.
+   * @param {Object} p المشارك {shareMode, shareValue}
+   * @param {number} total إجمالي الدين
+   */
+  C.partnerShare = function (p, total) {
+    var t = U.round2(total);
+    if (!p) return 0;
+    if (p.shareMode === 'pct') return U.round2(t * U.clamp(U.toNum(p.shareValue), 0, 100) / 100);
+    if (p.shareMode === 'amount') return U.round2(U.clamp(U.toNum(p.shareValue), 0, t));
+    return 0;
+  };
+
   C.contributors = function (loan, pays) {
     pays = pays || App.store.payments(loan.id);
     var partners = loan.partners || [];
@@ -40,29 +53,33 @@
       paidBy[k] = U.round2((paidBy[k] || 0) + U.toNum(p.amount));
     });
 
-    var partnersPct = U.round2(partners.reduce(function (a, p) { return a + U.toNum(p.sharePct); }, 0));
-    var myPct = U.round2(Math.max(0, 100 - partnersPct));
+    var shareOf = C.partnerShare;
+    var partnersShare = U.sum(partners, function (p) { return shareOf(p, total); });
+    var myShare = U.round2(Math.max(0, total - partnersShare));
 
-    function make(id, name, isMe, pct) {
-      var hasShare = pct > 0;
-      var shareAmount = U.round2(total * (pct / 100));
+    function make(id, name, isMe, shareAmount, mode) {
+      var hasShare = shareAmount > 0;
       var paid = U.round2(paidBy[id] || 0);
+      var mine = pays.filter(function (p) { return (p.payerId || 'me') === id; });
       return {
         id: id,
         name: name,
         isMe: !!isMe,
-        sharePct: pct,
+        shareMode: mode,
         shareAmount: shareAmount,
+        sharePct: total > 0 ? U.round2((shareAmount / total) * 100) : 0,
         paid: paid,
         remaining: hasShare ? U.round2(Math.max(0, shareAmount - paid)) : null,
-        progress: (hasShare && shareAmount > 0) ? U.round2(Math.min(100, (paid / shareAmount) * 100)) : null,
+        progress: hasShare ? U.round2(Math.min(100, (paid / shareAmount) * 100)) : null,
         hasShare: hasShare,
-        paymentsCount: pays.filter(function (p) { return (p.payerId || 'me') === id; }).length
+        paymentsCount: mine.length,
+        lastPaymentDate: mine.length ? mine[0].date : null,
+        avgPayment: mine.length ? U.round2(U.sum(mine, function (p) { return p.amount; }) / mine.length) : 0
       };
     }
 
-    var out = [make('me', 'أنا', true, myPct)];
-    partners.forEach(function (p) { out.push(make(p.id, p.name, false, U.round2(p.sharePct))); });
+    var out = [make('me', 'أنا', true, myShare, myShare > 0 ? 'rest' : 'none')];
+    partners.forEach(function (p) { out.push(make(p.id, p.name, false, shareOf(p, total), p.shareMode)); });
     return out;
   };
 

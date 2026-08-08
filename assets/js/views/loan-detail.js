@@ -59,9 +59,20 @@
         ? '<b class="money">' + F.num(c.paid) + '</b>' +
           '<div class="t-xs t-muted">من <span class="num">' + F.num(c.shareAmount) + '</span></div>'
         : '<b class="money">' + F.num(c.paid) + '</b><div class="t-xs t-muted">مدفوع</div>';
+      // وصف الحصّة: بحسب ما اختاره المستخدم (نسبة / مبلغ محدّد / بلا حصّة)
+      var shareText = !c.hasShare ? 'بلا حصّة محدّدة — يدفع بمبالغ متغيّرة'
+        : (c.isMe ? 'حصّتك المتبقية ' + F.pct(c.sharePct)
+          : (c.shareMode === 'amount'
+              ? 'حصّته مبلغ محدّد ' + F.money(c.shareAmount) + ' (' + F.pct(c.sharePct) + ')'
+              : 'حصّته ' + F.pct(c.sharePct)));
       var sub = c.hasShare
-        ? 'حصّته ' + F.pct(c.sharePct) + ' · ' + (c.remaining > 0 ? 'متبقٍ عليه ' + F.money(c.remaining) : 'أكمل حصّته ✓')
-        : 'بلا حصّة محدّدة · ' + F.installments(c.paymentsCount).replace('قسط', 'دفعة').replace('أقساط', 'دفعات');
+        ? shareText + ' · ' + (c.remaining > 0
+            ? (c.isMe ? 'متبقٍ عليك ' : 'متبقٍ عليه ') + F.money(c.remaining)
+            : (c.isMe ? 'أكملت حصّتك ✓' : 'أكمل حصّته ✓'))
+        : shareText + (c.paymentsCount
+            ? ' · ' + F.num(c.paymentsCount) + ' دفعة بمتوسّط ' + F.money(c.avgPayment)
+            : '');
+      if (c.lastPaymentDate) sub += ' · آخر دفعة ' + F.dateShort(c.lastPaymentDate);
 
       return '<div class="contrib">' +
         '<div class="row">' +

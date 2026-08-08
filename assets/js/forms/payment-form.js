@@ -62,14 +62,24 @@
     box.innerHTML = rows;
   }
 
-  function amountChips(st) {
+  /** رقائق المبالغ السريعة — وتشمل «باقي حصّة الدافع» إن كان مشاركًا بحصّة */
+  function amountChips(st, payerId) {
     if (!st) return '';
     var one = st.installment;
-    var chips = [
+    var list = [
       { val: U.round2(Math.min(one, st.remaining)), label: 'قسط واحد' },
       { val: U.round2(Math.min(one * 2, st.remaining)), label: 'قسطان' },
       { val: U.round2(st.remaining), label: 'كامل المتبقي' }
-    ].filter(function (c, i, arr) {
+    ];
+
+    if (App.store.sharingOn() && st.shared && payerId && payerId !== 'me') {
+      var who = st.contributors.filter(function (c) { return c.id === payerId; })[0];
+      if (who && who.hasShare && who.remaining > 0) {
+        list.unshift({ val: U.round2(Math.min(who.remaining, st.remaining)), label: 'باقي حصّته' });
+      }
+    }
+
+    var chips = list.filter(function (c, i, arr) {
       return c.val > 0 && arr.findIndex(function (x) { return x.val === c.val; }) === i;
     });
     if (!chips.length) return '';
@@ -147,7 +157,7 @@
       '<div data-payer-slot>' + payerField(loan, editing ? editing.payerId : (opt.payerId || 'me')) + '</div>' +
 
       W.money({ name: 'amount', label: 'المبلغ المدفوع', required: true, value: defaultAmount, autofocus: true }) +
-      '<div data-chips-slot>' + amountChips(st) + '</div>' +
+      '<div data-chips-slot>' + amountChips(st, editing ? editing.payerId : (opt.payerId || 'me')) + '</div>' +
 
       W.date({ name: 'date', label: 'تاريخ الدفعة', required: true, value: editing ? editing.date : U.today(),
                hint: 'مضبوط على تاريخ اليوم — غيّره لتاريخ سابق أو قادم إن احتجت.' }) +
@@ -176,7 +186,11 @@
           if (!pc) return;
           D.$$('[data-payer-chips] .chip', el).forEach(function (c) { c.classList.remove('is-active'); });
           pc.classList.add('is-active');
-          form.querySelector('[name="payerId"]').value = pc.getAttribute('data-val');
+          var newPayer = pc.getAttribute('data-val');
+          form.querySelector('[name="payerId"]').value = newPayer;
+          // رقاقة «باقي حصّته» تتغيّر بتغيّر الدافع
+          var curLoan = App.store.loan(form.querySelector('[name="loanId"]').value);
+          if (curLoan) form.querySelector('[data-chips-slot]').innerHTML = amountChips(App.calc.loanStats(curLoan), newPayer);
           refreshImpact(form, opt.paymentId);
         });
 
@@ -198,7 +212,7 @@
             var l = App.store.loan(sel.value);
             if (!l) return;
             var s2 = App.calc.loanStats(l);
-            form.querySelector('[data-chips-slot]').innerHTML = amountChips(s2);
+            form.querySelector('[data-chips-slot]').innerHTML = amountChips(s2, 'me');
             // مشاركو الدين الجديد يختلفون — نُعيد بناء اختيار الدافع
             form.querySelector('[data-payer-slot]').innerHTML = payerField(l, 'me');
             if (!editing) form.querySelector('[name="amount"]').value = U.round2(Math.min(s2.installment, s2.remaining) || s2.installment);

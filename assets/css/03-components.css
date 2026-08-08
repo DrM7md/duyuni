@@ -118,21 +118,27 @@
 .switch.is-on { background: var(--brand); }
 .switch.is-on::after { transform: translateX(-19px); }   /* RTL: يتحرّك يسارًا */
 
-/* ---------- صفّ مشارك في السداد ---------- */
-.partner-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.partner-row .input { min-height: 44px; }
-.partner-row__pct { width: 104px; flex-shrink: 0; }
-.partner-row__pct .input { padding-left: 34px; }
-.partner-row__pct .input-group__suffix { left: 10px; }
-.partner-row__rm {
-  width: 40px; height: 44px;
+/* ---------- بطاقة مشارك في السداد ---------- */
+.partner-card {
+  padding: 11px;
+  margin-bottom: 9px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.partner-card .input { min-height: 42px; background: var(--surface); }
+.partner-card .chips { gap: 6px; }
+.partner-card .chip { padding: 5px 10px; font-size: .74rem; background: var(--surface); }
+.partner-card__value { margin-top: 8px; }
+.partner-card__rm {
+  width: 40px; height: 42px;
   flex-shrink: 0;
   display: grid; place-items: center;
   border-radius: var(--r-sm);
   background: var(--danger-soft);
   color: var(--danger);
 }
-.partner-row__rm svg { width: 17px; height: 17px; }
+.partner-card__rm svg { width: 17px; height: 17px; }
 
 /* ---------- الرقائق (اختيار سريع) ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 7px; }

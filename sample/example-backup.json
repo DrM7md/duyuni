@@ -28,19 +28,21 @@
       "installmentsCount": 48,
       "startDate": "2026-01-05",
       "openingPaid": 0,
-      "notes": "عقد رقم 44821 — الخصم تلقائي من الراتب يوم 5 من كل شهر. يشاركني أحمد بـ40% وخالد يساعد بمبالغ متغيّرة.",
+      "notes": "عقد رقم 44821 — الخصم تلقائي من الراتب يوم 5 من كل شهر. يشاركني أحمد بنسبة 40% وخالد بمبلغ محدّد 12,000.",
       "archived": false,
       "createdAt": "2026-01-05T08:00:00.000Z",
       "partners": [
         {
           "id": "prt_demo_ahmed",
           "name": "أحمد",
-          "sharePct": 40
+          "shareMode": "pct",
+          "shareValue": 40
         },
         {
           "id": "prt_demo_khaled",
           "name": "خالد",
-          "sharePct": 0
+          "shareMode": "amount",
+          "shareValue": 12000
         }
       ]
     },
