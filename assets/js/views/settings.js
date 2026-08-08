@@ -198,7 +198,17 @@
         ? F.dateShort(String(s.lastBackupAt).slice(0, 10))
         : 'لم تُصدَّر بعد';
 
-      return W.sectionTitle('بياناتي') +
+      /* حالة التثبيت — تظهر فقط عند التشغيل من رابط (لا من ملف محلّي) */
+      var onWeb = location.protocol === 'http:' || location.protocol === 'https:';
+      var installed = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      var appCard = !onWeb ? '' : (installed
+        ? W.alert('ok', 'checkCircle', 'التطبيق مثبَّت على جهازك',
+            'يعمل بلا إنترنت، وبياناتك محفوظة محليًّا.')
+        : W.alert('warn', 'download', 'ثبّت التطبيق على جهازك',
+            'من قائمة المتصفّح اختر «إضافة إلى الشاشة الرئيسية» — يعمل بعدها بلا إنترنت وبأيقونة مستقلّة.'));
+
+      return appCard +
+        W.sectionTitle('بياناتي') +
         '<div class="card card--flush"><div class="list">' +
           row('salary', 'الراتب والدخل الشهري', ov.income ? F.money(ov.income) : 'غير مُدخل', 'edit-income') +
           row('coins', 'العملة', U.esc(F.currency()), 'currency') +

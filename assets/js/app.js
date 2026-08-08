@@ -124,6 +124,29 @@
     App.router.onRender = paint;
   }
 
+  /* ---------- تسجيل Service Worker (للعمل بلا إنترنت) ----------
+     يُفعّل على http/https فقط — المتصفّحات لا تدعمه عند فتح الملف من file://
+     وهناك يعمل التطبيق أصلًا بلا إنترنت لأنه ملفات محلّية. */
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      reg.addEventListener('updatefound', function () {
+        var incoming = reg.installing;
+        if (!incoming) return;
+        incoming.addEventListener('statechange', function () {
+          // نُبلّغ فقط عند وجود نسخة سابقة تعمل بالفعل
+          if (incoming.state === 'activated' && navigator.serviceWorker.controller) {
+            App.toast.show('تم تحديث التطبيق — أعد فتحه لتطبيق التحديث', 4000);
+          }
+        });
+      });
+    }).catch(function (e) {
+      console.warn('تعذّر تسجيل Service Worker:', e);
+    });
+  }
+
   /* ---------- الإقلاع ---------- */
   function boot() {
     viewEl = document.getElementById('view');
@@ -136,6 +159,7 @@
     registerRoutes();
     bindGlobalEvents();
     App.router.start();
+    registerServiceWorker();
 
     // تنبيه إن كان التخزين المحلّي معطّلًا (وضع التصفّح الخاص مثلًا)
     try {
