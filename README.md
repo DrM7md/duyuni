@@ -220,3 +220,11 @@ duyuni/
 GitHub Pages يخدم فرع `main` مباشرة — كل دفع يحدّث الموقع خلال دقيقة، بلا خطوة بناء.
 
 > **مهم عند تعديل الملفات:** ارفع رقم `VERSION` في [`sw.js`](sw.js) (مثلًا `duyuni-v2`) وأضف أي ملف جديد إلى قائمة `SHELL`، وإلّا استمرّ المتصفّح في تقديم النسخة المخزّنة القديمة.
+
+## ☕ ادعم المشروع
+
+إذا أفادك هذا المشروع، يمكنك دعم تطويره عبر PayPal:
+
+[![PayPal](https://img.shields.io/badge/PayPal-Support-00457C?logo=paypal&logoColor=white)](https://paypal.me/SamtSoftware)
+
+👉 https://paypal.me/SamtSoftware
